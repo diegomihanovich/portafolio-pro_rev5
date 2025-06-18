@@ -1,7 +1,7 @@
 import yfinance as yf
 import pandas as pd
-from js import params as js_params   # <<< NUEVO
-params = js_params.to_py()           # <<< NUEVO
+import js
+params = js.params.to_py()
 
 tickers = params["tickers"]
 freq    = params["freq"]
