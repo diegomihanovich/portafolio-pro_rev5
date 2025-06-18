@@ -1,21 +1,29 @@
-import yfinance as yf, pandas as pd, datetime as dt, js, params
+import yfinance as yf
+import pandas as pd
+from js import params as js_params   # <<< NUEVO
+params = js_params.to_py()           # <<< NUEVO
 
 tickers = params["tickers"]
-freq = params["freq"]
+freq    = params["freq"]
 
-if params["mode"] == "preset":
+# Look-back o fechas personalizadas
+if params.get("mode") == "preset":
     hist = yf.download(tickers, period=params["lookback"])
 else:
-    hist = yf.download(tickers, start=params["start"], end=params["end"])
+    hist = yf.download(tickers,
+                       start=params["start"],
+                       end=params["end"])
 
-prices = hist['Adj Close'].dropna()
+prices = hist["Adj Close"].dropna()
 prices = prices.resample(freq).last()
 returns = prices.pct_change().dropna()
 
 stats = {
     "mean": float(returns.mean().mean()),
-    "vol": float(returns.stack().std())
+    "vol" : float(returns.stack().std())
 }
 
+# Devolver objetos a JS
+import js
 js.stats = stats
 js.returns_df = returns
