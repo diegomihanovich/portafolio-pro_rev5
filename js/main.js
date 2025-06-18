@@ -6,6 +6,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     indexURL: "https://cdn.jsdelivr.net/pyodide/v0.26.0/full/"
   }).then(async (py) => {
     await py.loadPackage(['numpy', 'pandas']);  // SciPy lo instalaremos después
+    await py.loadPackage('micropip');
+    await py.runPythonAsync(`import micropip; await micropip.install("yfinance==0.2.38")`);
     console.log('✅ Pyodide listo');
     return py;
   });
@@ -15,6 +17,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   const advancedPanel  = document.getElementById('advanced-panel');
   const lookbackSelect = document.getElementById('lookback-select');
   const customDates    = document.getElementById('custom-dates');
+  const dateStartInput = document.getElementById('date-start');
+  const dateEndInput   = document.getElementById('date-end');
   const optimizeBtn    = document.getElementById('optimize-btn');
   const dashboard      = document.getElementById('dashboard');
 
@@ -27,6 +31,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     customDates.classList.toggle('hidden', e.target.value !== 'custom')
   );
 
+  function buildPythonInput(){
+    const tickers = document.getElementById('tickers-input').value
+      .split(',')
+      .map(t => t.trim().toUpperCase())
+      .filter(Boolean);
+
+    const freq = document.getElementById('freq-select').value;
+    const rf   = parseFloat(document.getElementById('rf-input').value) || 0;
+
+    const lookback = lookbackSelect.value;
+    if(lookback !== 'custom'){
+      return {tickers, freq, rf, mode:'preset', lookback};
+    }
+    return {
+      tickers, freq, rf, mode:'custom',
+      start: dateStartInput.value, end: dateEndInput.value
+    };
+  }
+
   /* ---------- D. Optimize (placeholder) ---------- */
   optimizeBtn.addEventListener('click', async () => {
     // 1) Validaciones rápidas
@@ -37,24 +60,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (tickers.length === 0) { alert('Ingresa al menos un ticker'); return; }
     if (tickers.length > 20)  { alert('Máximo 20 activos'); return; }
 
-    // 2) Mostrar “dashboard” y dibujar gráficos fake (por ahora)
+    // 2) Mostrar dashboard
     dashboard.style.display = 'block';
+
+    // 3) Ejecutar Python
+    const py = await pyodideReady;
+    py.globals.set('params', buildPythonInput());
+    await py.runPythonAsync(await (await fetch("python/fetch_prices.py")).text());
+    const stats = py.globals.get('stats').toJs();
+    updateMetricCards(stats);
+
+    // 4) Dibujar gráficos placeholder
     drawPlaceholders();
     if (window.innerWidth < 1200) dashboard.scrollIntoView({behavior:'smooth'});
-
-    // 3) Aquí pondremos la magia Python ↘️
-    /*
-    const py = await pyodideReady;
-    py.globals.set('tickers', tickers);
-    await py.runPythonAsync(`
-        import pandas as pd, js
-        # TODO: descargar precios con yfinance y hacer Markowitz
-        result = {'ret': 0.12, 'vol': 0.18, 'sharpe': 0.67}
-        js.document.getElementById('metric-ret').textContent    = f"{result['ret']*100:.1f}%"
-        js.document.getElementById('metric-vol').textContent    = f"{result['vol']*100:.1f}%"
-        js.document.getElementById('metric-sharpe').textContent = f"{result['sharpe']:.2f}"
-    `);
-    */
   });
 
   /* ---------- E. Chart placeholders ---------- */
@@ -88,10 +106,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       options:{responsive:true}
     });
 
-    // Métricas demo
-    document.getElementById('metric-ret').textContent    = '12.5%';
-    document.getElementById('metric-vol').textContent    = '18.2%';
-    document.getElementById('metric-sharpe').textContent = '0.68';
-    document.getElementById('metric-div').textContent    = '🟧 Medio';
+  }
+
+  function updateMetricCards(stats){
+    if(!stats) return;
+    document.getElementById('metric-ret').textContent = (stats.mean*100).toFixed(1) + '%';
+    document.getElementById('metric-vol').textContent = (stats.vol*100).toFixed(1) + '%';
   }
 });
