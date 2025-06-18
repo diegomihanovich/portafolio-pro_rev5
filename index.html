@@ -45,69 +45,79 @@
           </div>
         </div>
 
-        <!-- 2. ACTIVOS  -->
-        <div class="card">
-          <h3 class="card-header">2. Activos</h3>
-          <div class="input-group">
-            <label for="tickers-input">Tickers (máx 20, separados por coma)</label>
-            <input id="tickers-input" class="text-input" placeholder="Ej: AAPL, GOOG, SPY" />
-          </div>
+     <!-- 2. ACTIVOS -->
+<div class="card">
+  <h3 class="card-header">2. Activos</h3>
 
-          <!-- CONTROLES AVANZADOS – ocultos por defecto -->
-          <div id="advanced-panel" class="hidden">
-            <!--   🎚️   Aquí se inyectarán (via JS) los sliders “Máx %” por ticker   -->
-        <!-- Se generan dinámicamente para cada ticker -->
-          <div class="limit-row">
-        <span>AAPL</span>
-        <input type="range" min="0" max="100" step="1" value="30" data-ticker="AAPL">
-          <span class="limit-val">30 %</span>
-        </div>
-            <hr />
-            <hr />
-<label class="checkbox-inline">
-  <input type="checkbox" id="defensive-toggle" checked />
-  Incluir activos defensivos (BND · GLD · SHY)
-</label>
+  <!-- Campo para que el usuario escriba sus tickers -->
+  <div class="input-group">
+    <label for="tickers-input">Tickers (máx 20, separados por coma)</label>
+    <input id="tickers-input"
+           class="text-input"
+           placeholder="Ej: AAPL, GOOG, SPY" />
+  </div>
 
+  <!-- CONTROLES AVANZADOS – ocultos por defecto -->
+  <div id="advanced-panel" class="hidden">
 
-            <!-- Ventana temporal -->
-            <div class="input-group">
-              <label for="lookback-select">Ventana temporal</label>
-              <select id="lookback-select" class="text-input">
-                <option value="3y">Últimos 3 años</option>
-                <option value="5y" selected>Últimos 5 años</option>
-                <option value="10y">Últimos 10 años</option>
-                <option value="custom">Personalizada…</option>
-              </select>
-            </div>
+    <!-- 🎚️ Aquí se inyectarán (via JS) los sliders “Máx %” por ticker -->
 
-            <!-- Fechas personalizadas -->
-            <div id="custom-dates" class="hidden">
-              <div class="input-group">
-                <label>Desde</label><input type="date" id="date-start" class="text-input" />
-              </div>
-              <div class="input-group">
-                <label>Hasta</label><input type="date" id="date-end" class="text-input" />
-              </div>
-            </div>
+    <hr />
 
-            <!-- Frecuencia -->
-            <div class="input-group">
-              <label for="freq-select">Frecuencia de precio</label>
-              <select id="freq-select" class="text-input">
-                <option value="D">Diaria</option>
-                <option value="W">Semanal</option>
-                <option value="M" selected>Mensual</option>
-              </select>
-            </div>
+    <!-- Checkbox: activos defensivos -->
+    <label class="checkbox-inline">
+      <input type="checkbox" id="defensive-toggle" checked />
+      Incluir activos defensivos (BND · GLD · SHY)
+    </label>
 
-            <!-- Tasa libre de riesgo -->
-            <div class="input-group">
-              <label for="rf-input">Tasa libre de riesgo (%)</label>
-              <input type="number" id="rf-input" class="text-input" value="4" step="0.1" />
-            </div>
-          </div>
-        </div>
+    <hr />
+
+    <!-- Ventana temporal -->
+    <div class="input-group">
+      <label for="lookback-select">Ventana temporal</label>
+      <select id="lookback-select" class="text-input">
+        <option value="3y">Últimos 3 años</option>
+        <option value="5y" selected>Últimos 5 años</option>
+        <option value="10y">Últimos 10 años</option>
+        <option value="custom">Personalizada…</option>
+      </select>
+    </div>
+
+    <!-- Fechas personalizadas (se muestra solo si elige “Personalizada…”) -->
+    <div id="custom-dates" class="hidden">
+      <div class="input-group">
+        <label>Desde</label>
+        <input type="date" id="date-start" class="text-input" />
+      </div>
+      <div class="input-group">
+        <label>Hasta</label>
+        <input type="date" id="date-end" class="text-input" />
+      </div>
+    </div>
+
+    <!-- Frecuencia -->
+    <div class="input-group">
+      <label for="freq-select">Frecuencia de precio</label>
+      <select id="freq-select" class="text-input">
+        <option value="D">Diaria</option>
+        <option value="W">Semanal</option>
+        <option value="M" selected>Mensual</option>
+      </select>
+    </div>
+
+    <!-- Tasa libre de riesgo -->
+    <div class="input-group">
+      <label for="rf-input">Tasa libre de riesgo (%)</label>
+      <input type="number"
+             id="rf-input"
+             class="text-input"
+             value="4"
+             step="0.1" />
+    </div>
+
+  </div><!-- /advanced-panel -->
+</div><!-- /card -->
+
 
         <!-- BOTÓN CTA -->
         <button id="optimize-btn" class="cta-button">Analizar y optimizar</button>
