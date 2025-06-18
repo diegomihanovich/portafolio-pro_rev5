@@ -55,7 +55,20 @@
 
           <!-- CONTROLES AVANZADOS – ocultos por defecto -->
           <div id="advanced-panel" class="hidden">
+            <!--   🎚️   Aquí se inyectarán (via JS) los sliders “Máx %” por ticker   -->
+        <!-- Se generan dinámicamente para cada ticker -->
+          <div class="limit-row">
+        <span>AAPL</span>
+        <input type="range" min="0" max="100" step="1" value="30" data-ticker="AAPL">
+          <span class="limit-val">30 %</span>
+        </div>
             <hr />
+            <hr />
+<label class="checkbox-inline">
+  <input type="checkbox" id="defensive-toggle" checked />
+  Incluir activos defensivos (BND · GLD · SHY)
+</label>
+
 
             <!-- Ventana temporal -->
             <div class="input-group">
