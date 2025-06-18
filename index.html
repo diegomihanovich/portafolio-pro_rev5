@@ -1,0 +1,139 @@
+<!--  PortaFolio Pro – MVP v0.2  -->
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>PortaFolio Pro</title>
+
+    <!-- Hoja de estilos -->
+    <link rel="stylesheet" href="css/style.css" />
+
+    <!-- Chart.js para los gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+
+    <!-- Pyodide (Python en el navegador) -->
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.26.0/full/pyodide.js" defer></script>
+
+    <!-- Lógica de la aplicación -->
+    <script src="js/main.js" type="module" defer></script>
+  </head>
+
+  <body>
+    <div class="main-container">
+      <!-- COLUMNA DE CONTROLES -->
+      <div class="controls-column">
+        <h1>PortaFolio Pro 🚀</h1>
+        <p>Optimiza tu cartera usando la Teoría Moderna de Portafolio.</p>
+
+        <!-- MODO AVANZADO -->
+        <div class="card">
+          <div class="toggle-switch">
+            <input type="checkbox" id="advanced-toggle" />
+            <label for="advanced-toggle" class="slider"></label>
+            <label for="advanced-toggle">Opciones avanzadas</label>
+          </div>
+        </div>
+
+        <!-- 1. PERFIL DE RIESGO -->
+        <div class="card">
+          <h3 class="card-header">1. Perfil de riesgo</h3>
+          <div class="radio-group">
+            <label><input type="radio" name="perfil" value="conservador" checked> Conservador</label>
+            <label><input type="radio" name="perfil" value="moderado"> Moderado</label>
+            <label><input type="radio" name="perfil" value="agresivo"> Agresivo</label>
+          </div>
+        </div>
+
+        <!-- 2. ACTIVOS  -->
+        <div class="card">
+          <h3 class="card-header">2. Activos</h3>
+          <div class="input-group">
+            <label for="tickers-input">Tickers (máx 20, separados por coma)</label>
+            <input id="tickers-input" class="text-input" placeholder="Ej: AAPL, GOOG, SPY" />
+          </div>
+
+          <!-- CONTROLES AVANZADOS – ocultos por defecto -->
+          <div id="advanced-panel" class="hidden">
+            <hr />
+
+            <!-- Ventana temporal -->
+            <div class="input-group">
+              <label for="lookback-select">Ventana temporal</label>
+              <select id="lookback-select" class="text-input">
+                <option value="3y">Últimos 3 años</option>
+                <option value="5y" selected>Últimos 5 años</option>
+                <option value="10y">Últimos 10 años</option>
+                <option value="custom">Personalizada…</option>
+              </select>
+            </div>
+
+            <!-- Fechas personalizadas -->
+            <div id="custom-dates" class="hidden">
+              <div class="input-group">
+                <label>Desde</label><input type="date" id="date-start" class="text-input" />
+              </div>
+              <div class="input-group">
+                <label>Hasta</label><input type="date" id="date-end" class="text-input" />
+              </div>
+            </div>
+
+            <!-- Frecuencia -->
+            <div class="input-group">
+              <label for="freq-select">Frecuencia de precio</label>
+              <select id="freq-select" class="text-input">
+                <option value="D">Diaria</option>
+                <option value="W">Semanal</option>
+                <option value="M" selected>Mensual</option>
+              </select>
+            </div>
+
+            <!-- Tasa libre de riesgo -->
+            <div class="input-group">
+              <label for="rf-input">Tasa libre de riesgo (%)</label>
+              <input type="number" id="rf-input" class="text-input" value="4" step="0.1" />
+            </div>
+          </div>
+        </div>
+
+        <!-- BOTÓN CTA -->
+        <button id="optimize-btn" class="cta-button">Analizar y optimizar</button>
+      </div>
+
+      <!-- COLUMNA DASHBOARD -->
+      <div class="dashboard-column" id="dashboard">
+        <h2>Resultados</h2>
+
+        <div class="card">
+          <!-- Métricas clave -->
+          <div class="metrics-grid">
+            <div class="metric-item">
+              <h3>Rend. anual</h3><p id="metric-ret">–</p>
+            </div>
+            <div class="metric-item">
+              <h3>Volatilidad</h3><p id="metric-vol">–</p>
+            </div>
+            <div class="metric-item">
+              <h3>Sharpe</h3><p id="metric-sharpe">–</p>
+            </div>
+            <div class="metric-item">
+              <h3>Diversif.</h3><p id="metric-div">–</p>
+            </div>
+          </div>
+
+          <!-- Gráficos -->
+          <div class="charts-grid">
+            <div>
+              <h3 class="card-header">Frontera eficiente</h3>
+              <canvas id="scatterChart"></canvas>
+            </div>
+            <div>
+              <h3 class="card-header">Asignación</h3>
+              <canvas id="pieChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
