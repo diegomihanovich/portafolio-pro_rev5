@@ -65,7 +65,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 3) Ejecutar Python
     const py = await pyodideReady;
-    py.globals.set('params', buildPythonInput());
+    const params = buildPythonInput();
+    py.globals.set('params', params);
     await py.runPythonAsync(await (await fetch("python/fetch_prices.py")).text());
     const stats = py.globals.get('stats').toJs();
     updateMetricCards(stats);
