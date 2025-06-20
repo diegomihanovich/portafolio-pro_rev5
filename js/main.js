@@ -64,12 +64,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     dashboard.classList.remove('hidden');
 
     // 3) Ejecutar Python
-    const py = await pyodideReady;
-    const params = buildPythonInput();
-    py.globals.set('params', params);
-    await py.runPythonAsync(await (await fetch("python/fetch_prices.py")).text());
-    const stats = py.globals.get('stats').toJs();
-    updateMetricCards(stats);
+    try {
+      const py = await pyodideReady;
+      const params = buildPythonInput();
+      py.globals.set('params', params);
+      const response = await fetch("python/fetch_prices.py");
+      const code = await response.text();
+      await py.runPythonAsync(code);
+      const stats = py.globals.get('stats').toJs();
+      updateMetricCards(stats);
+    } catch (err) {
+      console.error(err);
+      alert('Error al obtener o ejecutar fetch_prices.py');
+    }
 
     // 4) Dibujar gráficos placeholder
     drawPlaceholders();
