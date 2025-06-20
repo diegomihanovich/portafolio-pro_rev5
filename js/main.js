@@ -61,7 +61,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (tickers.length > 20)  { alert('Máximo 20 activos'); return; }
 
     // 2) Mostrar dashboard
-    dashboard.style.display = 'block';
+    dashboard.classList.remove('hidden');
 
     // 3) Ejecutar Python
     const py = await pyodideReady;
