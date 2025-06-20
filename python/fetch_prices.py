@@ -1,6 +1,6 @@
 import yfinance as yf
-import js
-params = js.params.to_py()
+
+params = params.to_py()
 
 tickers = params["tickers"]
 freq    = params["freq"]
