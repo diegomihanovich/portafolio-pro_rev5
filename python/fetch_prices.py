@@ -1,8 +1,5 @@
 import yfinance as yf
-import js
 
-# ``params`` se define desde JavaScript via ``py.globals.set('params', ...)``.
-# Convertimos el objeto JS a un dict de Python.
 params = params.to_py()
 
 tickers = params["tickers"]
