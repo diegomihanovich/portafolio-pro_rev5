@@ -2,15 +2,16 @@
 import yfinance as yf
 import js
 
-# 1. Obtenemos el "embajador" (JsProxy) desde JavaScript.
-# 2. Lo convertimos a un diccionario de Python real con .to_py()
-params = js.params.to_py()
+# La línea clave corregida:
+# 1. Busca en la "sala de reuniones" de Python (globals()) al embajador ('params').
+# 2. Una vez encontrado, traduce sus papeles (.to_py()).
+params = globals().get('params').to_py()
 
-# Ahora 'params' es un diccionario de Python y podemos leerlo sin problemas
+# Ahora sí, 'params' es un diccionario de Python y todo lo demás funciona.
 tickers = params["tickers"]
 freq    = params["freq"]
 
-# Look-back o fechas personalizadas (esto ya estaba perfecto)
+# Look-back o fechas personalizadas
 if params.get("mode") == "preset":
     hist = yf.download(tickers, period=params["lookback"])
 else:
@@ -19,19 +20,28 @@ else:
                        end=params["end"])
 
 # El resto del código funciona como un campeón
-prices   = hist["Adj Close"].dropna()
+# (Manejo el caso de un solo ticker para que no falle .dropna())
+if len(tickers) == 1:
+    prices = hist["Adj Close"].dropna()
+else:
+    prices = hist["Adj Close"].dropna(how='all')
+
 
 # Si solo hay un ticker, resample puede fallar. Nos aseguramos de que funcione.
 if not prices.empty:
-    prices = prices.resample(freq).last()
+    prices = prices.resample(freq).last().dropna()
 
 returns  = prices.pct_change().dropna()
 
 # Calculamos las estadísticas
 # Usamos .stack().mean() y .stack().std() para que funcione bien con uno o varios tickers
+mean_return = returns.mean().mean() if isinstance(returns, (yf.pd.Series, yf.pd.DataFrame)) and not returns.empty else 0
+volatility = returns.stack().std() if isinstance(returns, yf.pd.DataFrame) and not returns.empty else (returns.std() if isinstance(returns, yf.pd.Series) and not returns.empty else 0)
+
+
 stats = {
-    "mean": float(returns.mean().mean()),
-    "vol" : float(returns.stack().std())
+    "mean": float(mean_return),
+    "vol": float(volatility)
 }
 
 # Devolvemos los resultados a JavaScript para pintarlos en la pantalla
