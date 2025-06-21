@@ -1,9 +1,8 @@
 # python/fetch_prices.py
-import js                        #  👈  le dice a Pyodide dónde está el objeto JS
 import yfinance as yf
+import js                      # ⬅️ lo dejamos para devolver stats al final
 
-# params llegó como variable global (un JsProxy). Lo convertimos a dict de Py.
-params = js.params.to_py()       #  👈  ahora sí
+params  = globals()["params"]  # ← obtenido directo del namespace Py
 
 tickers = params["tickers"]
 freq    = params["freq"]
@@ -25,6 +24,6 @@ stats = {
     "vol" : float(returns.stack().std())
 }
 
-# Devolver objetos a JS
-js.stats       = stats           #  👈  ahora ‘js’ existe
-js.returns_df  = returns         #  se proxifica automáticamente
+# Devolver resultados a JavaScript
+js.stats      = stats
+js.returns_df = returns
