@@ -79,7 +79,7 @@ try {
   try {
     await py.runPythonAsync(code);          // ← aquí corre fetch_prices.py
   } catch (err) {
-    console.error(py.globals.get('sys').stderr.toJs()); // traceback completo
+    console.error(err);                                 // muestra el stack JS+Py
     alert('Uy, Python explotó: ' + err);    // aviso amigable por si acaso
     throw err;                              // re-lanzamos para que JS se entere
   }
