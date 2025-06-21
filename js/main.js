@@ -63,20 +63,36 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 2) Mostrar dashboard
     dashboard.classList.remove('hidden');
 
-    // 3) Ejecutar Python
-    try {
-      const py = await pyodideReady;
-      const params = buildPythonInput();
-      py.globals.set('params', params);
-      const response = await fetch("python/fetch_prices.py");
-      const code = await response.text();
-      await py.runPythonAsync(code);
-      const stats = py.globals.get('stats').toJs();
-      updateMetricCards(stats);
-    } catch (err) {
-      console.error(err);
-      alert('Error al obtener o ejecutar fetch_prices.py');
-    }
+// 3) Ejecutar Python
+try {
+  const py = await pyodideReady;
+
+  // 3-a) Preparo parámetros y los paso a Python
+  const params = buildPythonInput();
+  py.globals.set('params', params);
+
+  // 3-b) Traigo el código de Python desde GitHub Pages
+  const response = await fetch("python/fetch_prices.py");
+  const code     = await response.text();
+
+  // 3-c) Lo ejecuto en Pyodide y, si crashea, muestro el traceback
+  try {
+    await py.runPythonAsync(code);          // ← aquí corre fetch_prices.py
+  } catch (err) {
+    console.error(py.globals.get('sys').stderr.toJs()); // traceback completo
+    alert('Uy, Python explotó: ' + err);    // aviso amigable por si acaso
+    throw err;                              // re-lanzamos para que JS se entere
+  }
+
+  // 3-d) Leo los resultados y actualizo la UI
+  const stats = py.globals.get('stats').toJs();
+  updateMetricCards(stats);
+
+} catch (err) {
+  // Falla la red o la carga del .py ⇒ caemos aquí
+  console.error(err);
+  alert('Error al obtener o ejecutar fetch_prices.py');
+}
 
     // 4) Dibujar gráficos placeholder
     drawPlaceholders();
