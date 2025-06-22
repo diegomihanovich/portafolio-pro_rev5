@@ -1,4 +1,12 @@
 # python/fetch_prices.py
+
+# --- ¡EL ADAPTADOR UNIVERSAL! ---
+# 1. Importamos la librería que acabamos de instalar.
+import pyodide_http
+# 2. La activamos para que intercepte todas las llamadas de red.
+pyodide_http.patch_all()
+
+# python/fetch_prices.py
 import yfinance as yf
 import pandas as pd  # <--- ¡AQUÍ ESTÁ LA LÍNEA CLAVE QUE FALTABA!
 import js
