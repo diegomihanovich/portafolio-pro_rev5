@@ -84,8 +84,8 @@ try {
     throw err;                              // re-lanzamos para que JS se entere
   }
 
-  // 3-d) Leo los resultados y actualizo la UI
-  const stats = py.globals.get('stats').toJs();
+ // 3-d) Leo los resultados y actualizo la UI
+  const stats = js.stats.toJs(); // <-- ¡ESTA ES LA LÍNEA CORRECTA!
   updateMetricCards(stats);
 
 } catch (err) {
