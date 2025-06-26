@@ -1,63 +1,53 @@
-# python/fetch_prices.py
-
-# --- ¡EL ADAPTADOR UNIVERSAL! ---
-# 1. Importamos la librería que acabamos de instalar.
+# --- Adaptador de red para Pyodide ---
 import pyodide_http
-# 2. La activamos para que intercepte todas las llamadas de red.
 pyodide_http.patch_all()
 
-# python/fetch_prices.py
+# --- Librerías necesarias ---
 import yfinance as yf
-import pandas as pd  # <--- ¡AQUÍ ESTÁ LA LÍNEA CLAVE QUE FALTABA!
+import pandas as pd
 import js
 
-# 1. Obtenemos y convertimos los parámetros de forma segura.
+# 1. Obtener parámetros desde JavaScript
 params = globals().get('params').to_py()
-
 tickers = params["tickers"]
 freq    = params["freq"]
 
-# 2. Descargamos los datos históricos.
-if params.get("mode") == "preset":
-    hist = yf.download(tickers, period=params["lookback"], progress=False, auto_adjust=True)
-else:
-    hist = yf.download(tickers,
-                       start=params["start"],
-                       end=params["end"],
-                       progress=False,
-                       auto_adjust=True)
+# 2. Descargar datos históricos usando yfinance
+try:
+    if params.get("mode") == "preset":
+        hist = yf.download(tickers, period=params["lookback"], progress=False, auto_adjust=True)
+    else:
+        hist = yf.download(tickers,
+                           start=params["start"],
+                           end=params["end"],
+                           progress=False,
+                           auto_adjust=True)
+    prices = hist.get("Close")
+except Exception as e:
+    print(f"Error al descargar datos de yfinance: {e}")
+    prices = None # Aseguramos que 'prices' exista aunque falle la descarga
 
-# 3. Limpiamos los precios de forma cuidadosa.
-# Usamos 'Close' porque auto_adjust=True ya ajusta los precios.
-prices = hist.get("Close")
-
-# Si 'prices' es None o está vacío, no podemos continuar.
+# 3. Limpiar precios y calcular estadísticas
 if prices is None or prices.empty:
     stats = {"mean": 0, "vol": 0}
-    returns_df = pd.DataFrame() # <-- Usamos pd, no yf.pd
+    returns_df = pd.DataFrame()
 else:
-    # Si solo hay un ticker, el resultado es una Serie, no un DataFrame. Lo manejamos.
     if len(tickers) == 1:
         prices = prices.dropna()
     else:
         prices = prices.dropna(how='all')
 
-    # Volvemos a comprobar si nos quedamos sin datos después de limpiar
-    if prices.empty:
+    if prices.empty or len(prices) < 2:
         stats = {"mean": 0, "vol": 0}
-        returns_df = pd.DataFrame() # <-- Usamos pd, no yf.pd
+        returns_df = pd.DataFrame()
     else:
-        # Resampleamos a la frecuencia deseada
         prices_resampled = prices.resample(freq).last().dropna()
-
-        # --- El Guardia de Seguridad ---
+        
         if len(prices_resampled) < 2:
             stats = {"mean": 0, "vol": 0}
-            returns_df = pd.DataFrame(columns=prices_resampled.columns if isinstance(prices_resampled, pd.DataFrame) else [prices_resampled.name]) # <-- Usamos pd
+            returns_df = pd.DataFrame()
         else:
-            # ¡Ahora sí! Con suficientes datos, calculamos todo.
             returns_df  = prices_resampled.pct_change().dropna()
-            
             if returns_df.empty:
                 stats = {"mean": 0, "vol": 0}
             else:
@@ -68,6 +58,6 @@ else:
                     "vol": float(volatility)
                 }
 
-# 4. Devolvemos los resultados a JavaScript.
+# 4. Devolver resultados a JavaScript
 js.stats      = stats
 js.returns_df = returns_df
