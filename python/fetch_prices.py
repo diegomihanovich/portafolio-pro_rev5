@@ -59,5 +59,5 @@ else:
                 }
 
 # 4. Devolver resultados a JavaScript
-js.stats      = stats
-js.returns_df = returns_df
+js.py_stats      = stats
+js.py_returns_df = returns_df
