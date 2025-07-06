@@ -12,7 +12,7 @@ tickers = params.get("tickers", [])
 freq    = params.get("freq", "D")  # "D"=diario, "M"=mensual…
 
 # 4) Clave de Alpha Vantage (la tuya o la demo)
-api_key = js.window.localStorage.getItem("av_key") or "demo"
+api_key = js.window.localStorage.getItem("av_key") or "PF06Z4B1IVQX59NQ"
 
 # 5) Helpers -------------------------------------------------------
 def av_url(ticker):
