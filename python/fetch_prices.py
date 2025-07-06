@@ -1,63 +1,47 @@
 # --- Adaptador de red para Pyodide ---
-import pyodide_http
-pyodide_http.patch_all()
+import pyodide_http; pyodide_http.patch_all()
 
-# --- Librerías necesarias ---
-import yfinance as yf
-import pandas as pd
-import js
+# --- Librerías ---
+import pandas as pd, requests, js, asyncio, time, datetime as dt
 
-# 1. Obtener parámetros desde JavaScript
-params = globals().get('params').to_py()
+# 0. Parámetros que llega desde JS
+params  = js.params.to_py()
 tickers = params["tickers"]
 freq    = params["freq"]
+api_key = js.window.localStorage.getItem("av_key") or "demo"  # pon tu key real
 
-# 2. Descargar datos históricos usando yfinance
-try:
-    if params.get("mode") == "preset":
-        hist = yf.download(tickers, period=params["lookback"], progress=False, auto_adjust=True)
-    else:
-        hist = yf.download(tickers,
-                           start=params["start"],
-                           end=params["end"],
-                           progress=False,
-                           auto_adjust=True)
-    prices = hist.get("Close")
-except Exception as e:
-    print(f"Error al descargar datos de yfinance: {e}")
-    prices = None # Aseguramos que 'prices' exista aunque falle la descarga
+def av_url(ticker):
+    return ( "https://www.alphavantage.co/query?"
+             f"function=TIME_SERIES_DAILY_ADJUSTED&symbol={ticker}"
+             f"&outputsize=full&apikey={api_key}" )
 
-# 3. Limpiar precios y calcular estadísticas
-if prices is None or prices.empty:
-    stats = {"mean": 0, "vol": 0}
-    returns_df = pd.DataFrame()
+def get_prices(ticker):
+    r = requests.get(av_url(ticker))
+    data = r.json().get("Time Series (Daily)", {})
+    df = (pd.DataFrame.from_dict(data, orient="index")
+                    .astype(float)
+                    .rename(columns={"5. adjusted close":ticker})
+                    [[ticker]])
+    df.index = pd.to_datetime(df.index)
+    return df.sort_index()
+
+frames = []
+for i,t in enumerate(tickers, start=1):
+    frames.append(get_prices(t))
+    if i % 5 == 0: time.sleep(12)        # límites free: 5 llam./min
+
+prices = pd.concat(frames, axis=1).dropna(how="all")
+
+# -- Re‐muestreo y métricas (idéntico a tu lógica anterior) --
+if prices.empty:
+    stats, returns_df = {"mean":0,"vol":0}, pd.DataFrame()
 else:
-    if len(tickers) == 1:
-        prices = prices.dropna()
-    else:
-        prices = prices.dropna(how='all')
+    prices = prices.resample(freq).last().dropna()
+    returns_df = prices.pct_change().dropna()
+    stats = {
+        "mean": float(returns_df.stack().mean()),
+        "vol" : float(returns_df.stack().std())
+    }
 
-    if prices.empty or len(prices) < 2:
-        stats = {"mean": 0, "vol": 0}
-        returns_df = pd.DataFrame()
-    else:
-        prices_resampled = prices.resample(freq).last().dropna()
-        
-        if len(prices_resampled) < 2:
-            stats = {"mean": 0, "vol": 0}
-            returns_df = pd.DataFrame()
-        else:
-            returns_df  = prices_resampled.pct_change().dropna()
-            if returns_df.empty:
-                stats = {"mean": 0, "vol": 0}
-            else:
-                mean_return = returns_df.stack().mean()
-                volatility = returns_df.stack().std()
-                stats = {
-                    "mean": float(mean_return),
-                    "vol": float(volatility)
-                }
-
-# 4. Devolver resultados a JavaScript
 js.py_stats      = stats
 js.py_returns_df = returns_df
