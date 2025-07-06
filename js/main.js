@@ -98,6 +98,24 @@ try {
     if (window.innerWidth < 1200) dashboard.scrollIntoView({behavior:'smooth'});
   });
 
+  /* ---------- API KEY helper ---------- */
+window.guardarKey = function guardarKey() {
+  const key = document.getElementById("apiKeyInput").value.trim();
+  if (!key) { alert("⚠️  Escribe tu clave primero"); return; }
+
+  localStorage.setItem("av_key", key);
+  alert("✅ ¡Key guardada! Ya puedes usar cualquier ticker.\n\n" +
+        "Si quieres, recarga la página para ocultar este cuadro.");
+  // Opcional: ocultar la tarjeta para que no moleste más
+  document.getElementById("apiKeyCard").classList.add("hidden");
+};
+
+// Al cargar, si la key ya existe, escondemos la tarjeta automáticamente
+if (localStorage.getItem("av_key")) {
+  document.addEventListener("DOMContentLoaded", () =>
+    document.getElementById("apiKeyCard").classList.add("hidden"));
+}
+
   /* ---------- E. Chart placeholders ---------- */
   function drawPlaceholders(){
     // Frontera
