@@ -7,7 +7,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   }).then(async (py) => {
     await py.loadPackage(['numpy', 'pandas']);  // SciPy lo instalaremos después
     await py.loadPackage('micropip');
-    await py.runPythonAsync(`import micropip; await micropip.install(["yfinance==0.2.38", "pyodide-http"])`);
     console.log('✅ Pyodide listo');
     return py;
   });
