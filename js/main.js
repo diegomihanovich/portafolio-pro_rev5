@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const pyodideReady = loadPyodide({
     indexURL: "https://cdn.jsdelivr.net/pyodide/v0.26.0/full/"
   }).then(async (py) => {
-    await py.loadPackage(['numpy', 'pandas']);  // SciPy lo instalaremos después
+    await py.loadPackage(['numpy','pandas','pyodide-http']);  // SciPy lo instalaremos después
     await py.loadPackage('micropip');
     console.log('✅ Pyodide listo');
     return py;
@@ -115,7 +115,7 @@ if (localStorage.getItem("av_key")) {
   document.addEventListener("DOMContentLoaded", () =>
     document.getElementById("apiKeyCard").classList.add("hidden"));
 }
-
+                                    
   /* ---------- E. Chart placeholders ---------- */
   function drawPlaceholders(){
     // Frontera
