@@ -118,6 +118,21 @@
   </div><!-- /advanced-panel -->
 </div><!-- /card -->
 
+        <!-- 3. API KEY (solo se ve la primera vez) -->
+<div class="card" id="apiKeyCard">
+  <h3 class="card-header">3. API Key Alpha Vantage</h3>
+
+  <div class="input-group">
+    <label for="apiKeyInput">Pega aquí tu key gratuita</label>
+    <input id="apiKeyInput"
+           class="text-input"
+           placeholder="PF06Z4B1IVQX59NQ" />
+  </div>
+
+  <button class="cta-button" onclick="guardarKey()">Guardar key</button>
+  <small>Se guarda en tu navegador y no la pediremos de nuevo.</small>
+</div>
+
 
         <!-- BOTÓN CTA -->
         <button id="optimize-btn" class="cta-button">Analizar y optimizar</button>
