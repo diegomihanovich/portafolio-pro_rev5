@@ -7,7 +7,7 @@ import pyodide_http; pyodide_http.patch_all()
 import pandas as pd, requests, js, asyncio, time
 
 # 3) Parámetros enviados desde JavaScript --------------------------
-params  = js.params.to_py()        # { "tickers": [...], "freq": "D" }
+params = globals().get("params", {})        # { "tickers": [...], "freq": "D" }
 tickers = params.get("tickers", [])
 freq    = params.get("freq", "D")  # "D"=diario, "M"=mensual…
 
