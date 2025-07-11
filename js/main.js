@@ -1,15 +1,20 @@
 /* PortaFolio Pro – lógica mínima (v0.2) */
 document.addEventListener('DOMContentLoaded', async () => {
 
-  /* ---------- A. Pyodide ---------- */
-  const pyodideReady = loadPyodide({
-    indexURL: "https://cdn.jsdelivr.net/pyodide/v0.26.0/full/"
-  }).then(async (py) => {
-    await py.loadPackage(['numpy','pandas','pyodide-http']);  // SciPy lo instalaremos después
-    await py.loadPackage('micropip');
-    console.log('✅ Pyodide listo');
-    return py;
-  });
+ /* ---------- A. Pyodide ---------- */
+const pyodideReady = loadPyodide({
+  indexURL: "https://cdn.jsdelivr.net/pyodide/v0.26.0/full/"
+}).then(async (py) => {
+  await py.loadPackage([
+    'numpy', 'pandas',
+    'requests', 'pyodide-http'   //  ← ya los habías añadido
+  ]);
+  await py.loadPackage('micropip');
+  console.log('✅ Pyodide listo');
+  return py;
+});
+
+window.pyodideReady = pyodideReady;   // <<–– ¡ESTA LÍNEA!
 
   /* ---------- B. DOM refs ---------- */
   const advancedToggle = document.getElementById('advanced-toggle');
