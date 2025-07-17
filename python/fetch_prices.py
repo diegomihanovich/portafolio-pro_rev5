@@ -12,7 +12,7 @@ raw = globals().get("params", {})
 params = to_py(raw) if not isinstance(raw, dict) else raw
 
 # 3) Parámetros enviados desde JavaScript --------------------------
-params = globals().get("params", {})        # { "tickers": [...], "freq": "D" }
+
 tickers = params.get("tickers", [])
 freq    = params.get("freq", "D")  # "D"=diario, "M"=mensual…
 
