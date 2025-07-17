@@ -6,15 +6,21 @@ import pyodide_http; pyodide_http.patch_all()
 # 2) Librerías estándar
 import pandas as pd, requests, js, asyncio, time
 
-from pyodide.ffi import to_py
-
-raw = globals().get("params", {})
-params = to_py(raw) if not isinstance(raw, dict) else raw
-
+# -----------------------------------------------------------------
 # 3) Parámetros enviados desde JavaScript --------------------------
+raw = globals().get("params", {})
+
+#  🔄  Convierte el proxy JS → dict de Python si hace falta
+if hasattr(raw, "to_py"):            # Pyodide ≥ 0.23 tiene .to_py()
+    params = raw.to_py()
+elif isinstance(raw, dict):          # ya es dict
+    params = raw
+else:                                # último recurso: lo dejamos vacío
+    params = {}
 
 tickers = params.get("tickers", [])
-freq    = params.get("freq", "D")  # "D"=diario, "M"=mensual…
+freq    = params.get("freq", "D")    # "D" diario, "M" mensual...
+
 
 # 4) Clave de Alpha Vantage (la tuya o la demo)
 api_key = js.window.localStorage.getItem("av_key") or "PF06Z4B1IVQX59NQ"
