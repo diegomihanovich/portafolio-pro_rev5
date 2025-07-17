@@ -6,6 +6,11 @@ import pyodide_http; pyodide_http.patch_all()
 # 2) Librerías estándar
 import pandas as pd, requests, js, asyncio, time
 
+from pyodide.ffi import to_py
+
+raw = globals().get("params", {})
+params = to_py(raw) if not isinstance(raw, dict) else raw
+
 # 3) Parámetros enviados desde JavaScript --------------------------
 params = globals().get("params", {})        # { "tickers": [...], "freq": "D" }
 tickers = params.get("tickers", [])
