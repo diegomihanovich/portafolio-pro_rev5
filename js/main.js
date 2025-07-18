@@ -1,3 +1,5 @@
+ import Chart from "https://cdn.jsdelivr.net/npm/chart.js/+esm";   // <script type="module">
+
 /* PortaFolio Pro – lógica mínima (v0.2) */
 document.addEventListener('DOMContentLoaded', async () => {
 
@@ -16,8 +18,6 @@ const pyodideReady = loadPyodide({
 
 window.pyodideReady = pyodideReady;   // <<–– ¡ESTA LÍNEA!
  
- import Chart from "https://cdn.jsdelivr.net/npm/chart.js/+esm";   // <script type="module">
-
 let pricesChart;                       // gráfico global (una sola instancia)
 
 function destroyChart(){
@@ -110,7 +110,7 @@ updateMetricCards(stats);
 destroyChart();                        // por si ya había uno
 
 const pricesDF = await pricesProxy.toJs();   // DataFrame → DataTable Arrow
-const dataJS   = pricesDF.reset_index().to_json({orient:"records"});
+const dataJS   = pricesDF.reset_index().to_json({orient:'records'});\nconst dataJS = JSON.parse(dataJSON);\n
 
 const labels   = dataJS.map(r => r.Date);
 const datasets = params.tickers.map(t => ({
