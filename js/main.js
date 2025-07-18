@@ -15,6 +15,15 @@ const pyodideReady = loadPyodide({
 });
 
 window.pyodideReady = pyodideReady;   // <<–– ¡ESTA LÍNEA!
+ 
+ import Chart from "https://cdn.jsdelivr.net/npm/chart.js/+esm";   // <script type="module">
+
+let pricesChart;                       // gráfico global (una sola instancia)
+
+function destroyChart(){
+  if (pricesChart) { pricesChart.destroy(); pricesChart = null; }
+}
+
 
   /* ---------- B. DOM refs ---------- */
   const advancedToggle = document.getElementById('advanced-toggle');
@@ -88,9 +97,42 @@ try {
     throw err;                              // re-lanzamos para que JS se entere
   }
 
-  // 3-d) Leo los resultados y actualizo la UI
-  const stats = window.py_stats.toJs();
-  updateMetricCards(stats);
+// 3-d) Leer resultados y actualizar la UI ---------------------------
+const statsProxy   = py.globals.get('stats');        // PyProxy
+const returnsProxy = py.globals.get('returns_df');
+const pricesProxy  = py.globals.get('prices');
+
+// 1) métricas
+const stats = statsProxy.toJs();
+updateMetricCards(stats);
+
+// 2) gráfico de precios --------------------------------------------
+destroyChart();                        // por si ya había uno
+
+const pricesDF = await pricesProxy.toJs();   // DataFrame → DataTable Arrow
+const dataJS   = pricesDF.reset_index().to_json({orient:"records"});
+
+const labels   = dataJS.map(r => r.Date);
+const datasets = params.tickers.map(t => ({
+  label : t,
+  data  : dataJS.map(r => r[t]),
+  fill  : false
+}));
+
+pricesChart = new Chart(
+  document.getElementById('pricesChart'),
+  { type:"line",
+    data:{ labels, datasets },
+    options:{ responsive:true,
+              scales:{ x:{ ticks:{maxTicksLimit:10} },
+                       y:{ title:{display:true,text:"Precio ajustado"} }}}}
+);
+
+// 3) ¡importante! liberar proxies
+statsProxy.destroy();
+returnsProxy.destroy();
+pricesProxy.destroy();
+
 
 } catch (err) {
   // Falla la red o la carga del .py ⇒ caemos aquí
