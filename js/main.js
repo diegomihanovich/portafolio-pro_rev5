@@ -97,22 +97,17 @@ try {
     throw err;                              // re-lanzamos para que JS se entere
   }
 
-// 3-d) Leer resultados y actualizar la UI ---------------------------
-const statsProxy   = py.globals.get('stats');        // PyProxy
-const returnsProxy = py.globals.get('returns_df');
-const pricesProxy  = py.globals.get('prices');
+// 3-d) Leer resultados y actualizar la UI -------------------------
+const statsProxy   = py.globals.get('stats');          // PyProxy
+const pricesJSON   = py.globals.get('py_prices_json'); // << string JSON
+const stats        = statsProxy.toJs();                // objeto JS normal
+updateMetricCards(stats);                              // métricas
 
-// 1) métricas
-const stats = statsProxy.toJs();
-updateMetricCards(stats);
+// ---------- Gráfico de precios ----------------------------------
+destroyChart();                                        // si existía uno
 
-// 2) gráfico de precios --------------------------------------------
-destroyChart();                        // por si ya había uno
-
-const pricesDF = await pricesProxy.toJs();   // DataFrame → DataTable Arrow
-const dataJS   = pricesDF.reset_index().to_json({orient:'records'});\nconst dataJS = JSON.parse(dataJSON);\n
-
-const labels   = dataJS.map(r => r.Date);
+const dataJS  = JSON.parse(pricesJSON);                // array de objetos
+const labels  = dataJS.map(r => r.Date);
 const datasets = params.tickers.map(t => ({
   label : t,
   data  : dataJS.map(r => r[t]),
@@ -121,12 +116,19 @@ const datasets = params.tickers.map(t => ({
 
 pricesChart = new Chart(
   document.getElementById('pricesChart'),
-  { type:"line",
-    data:{ labels, datasets },
-    options:{ responsive:true,
-              scales:{ x:{ ticks:{maxTicksLimit:10} },
-                       y:{ title:{display:true,text:"Precio ajustado"} }}}}
+  {
+    type   : "line",
+    data   : { labels, datasets },
+    options: {
+      responsive: true,
+      scales: {
+        x: { ticks: { maxTicksLimit: 10 } },
+        y: { title: { display: true, text: "Precio ajustado" } }
+      }
+    }
+  }
 );
+
 
 // 3) ¡importante! liberar proxies
 statsProxy.destroy();
