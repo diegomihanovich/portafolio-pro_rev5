@@ -97,16 +97,17 @@ try {
     throw err;                              // re-lanzamos para que JS se entere
   }
 
-// 3-d) Leer resultados y actualizar la UI -------------------------
-const statsProxy   = py.globals.get('stats');          // PyProxy
-const pricesJSON   = py.globals.get('py_prices_json'); // << string JSON
-const stats        = statsProxy.toJs();                // objeto JS normal
-updateMetricCards(stats);                              // métricas
+// 3-d) leer resultados y actualizar la UI -------------------------
+const statsProxy  = py.globals.get("stats");          // PyProxy → dict
+const pricesJSON  = py.globals.get("py_prices_json").toJs(); // string JSON ✔️
 
-// ---------- Gráfico de precios ----------------------------------
-destroyChart();                                        // si existía uno
+const stats = statsProxy.toJs();                     // objeto JS normal
+updateMetricCards(stats);
 
-const dataJS  = JSON.parse(pricesJSON);                // array de objetos
+// ---------- gráfico de precios ----------------------------------
+destroyChart();                                      // borra si ya había
+
+const dataJS  = JSON.parse(pricesJSON);              // array de objetos
 const labels  = dataJS.map(r => r.Date);
 const datasets = params.tickers.map(t => ({
   label : t,
@@ -115,7 +116,7 @@ const datasets = params.tickers.map(t => ({
 }));
 
 pricesChart = new Chart(
-  document.getElementById('pricesChart'),
+  document.getElementById("pricesChart"),
   {
     type   : "line",
     data   : { labels, datasets },
@@ -129,11 +130,8 @@ pricesChart = new Chart(
   }
 );
 
-
-// 3) ¡importante! liberar proxies
+// -- libera memoria (solo lo que existe)
 statsProxy.destroy();
-returnsProxy.destroy();
-pricesProxy.destroy();
 
 
 } catch (err) {
