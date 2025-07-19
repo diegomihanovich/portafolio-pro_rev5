@@ -9,26 +9,19 @@
     <!-- Hoja de estilos -->
     <link rel="stylesheet" href="css/style.css" />
 
-    <!-- ▼▼▼ INICIO DE LOS CAMBIOS (ORDEN CORRECTO) ▼▼▼ -->
-
-    <!-- 1. Luxon: Es una dependencia, no necesita a Chart.js para funcionar -->
+    <!-- 1. Luxon -->
     <script defer src="https://cdn.jsdelivr.net/npm/luxon@3/build/global/luxon.min.js"></script>
-
-    <!-- 2. Chart.js: La librería principal, la "base" que debe cargarse ahora -->
+    <!-- 2. Chart.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-
-    <!-- 3. Adaptador: Se engancha a Chart.js, por eso debe cargarse DESPUÉS -->
+    <!-- 3. Adaptador -->
     <script defer src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1"></script>
     
-    <!-- ▲▲▲ FIN DE LOS CAMBIOS ▲▲▲ -->
-
-    <!-- Pyodide y tu script principal van después, como estaban -->
+    <!-- Scripts principales -->
     <script src="https://cdn.jsdelivr.net/pyodide/v0.26.0/full/pyodide.js" defer></script>
     <script type="module" src="js/main.js" defer></script>
   </head>
 
   <body>
-    <!-- El resto del body no cambia... -->
     <div class="main-container">
       <!-- COLUMNA DE CONTROLES -->
       <div class="controls-column">
@@ -54,105 +47,74 @@
           </div>
         </div>
 
-     <!-- 2. ACTIVOS -->
-<div class="card">
-  <h3 class="card-header">2. Activos</h3>
+        <!-- 2. ACTIVOS -->
+        <div class="card">
+          <h3 class="card-header">2. Activos</h3>
 
-  <!-- Campo para que el usuario escriba sus tickers -->
-  <div class="input-group">
-    <label for="tickers-input">Tickers (máx 20, separados por coma)</label>
-    <input id="tickers-input"
-           class="text-input"
-           placeholder="Ej: AAPL, GOOG, SPY" />
-  </div>
+          <div class="input-group">
+            <label for="tickers-input">Tickers (máx 20, separados por coma)</label>
+            <input id="tickers-input"
+                  class="text-input"
+                  placeholder="Ej: AAPL, GOOG, SPY" />
+          </div>
 
-  <!-- CONTROLES AVANZADOS – ocultos por defecto -->
-  <div id="advanced-panel" class="hidden">
+          <div id="advanced-panel" class="hidden">
+            <hr />
+            <label class="checkbox-inline">
+              <input type="checkbox" id="defensive-toggle" checked />
+              Incluir activos defensivos (BND · GLD · SHY)
+            </label>
+            <hr />
+            <div class="input-group">
+              <label for="lookback-select">Ventana temporal</label>
+              <select id="lookback-select" class="text-input">
+                <option value="3y">Últimos 3 años</option>
+                <option value="5y" selected>Últimos 5 años</option>
+                <option value="10y">Últimos 10 años</option>
+                <option value="custom">Personalizada…</option>
+              </select>
+            </div>
+            <div id="custom-dates" class="hidden">
+              <div class="input-group">
+                <label>Desde</label>
+                <input type="date" id="date-start" class="text-input" />
+              </div>
+              <div class="input-group">
+                <label>Hasta</label>
+                <input type="date" id="date-end" class="text-input" />
+              </div>
+            </div>
+            <div class="input-group">
+              <label for="freq-select">Frecuencia de precio</label>
+              <select id="freq-select" class="text-input">
+                <option value="D">Diaria</option>
+                <option value="W">Semanal</option>
+                <option value="M" selected>Mensual</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label for="rf-input">Tasa libre de riesgo (%)</label>
+              <input type="number"
+                    id="rf-input"
+                    class="text-input"
+                    value="4"
+                    step="0.1" />
+            </div>
+          </div>
+        </div>
 
-    <!-- 🎚️ Aquí se inyectarán (via JS) los sliders “Máx %” por ticker -->
-
-    <hr />
-
-    <!-- Checkbox: activos defensivos -->
-    <label class="checkbox-inline">
-      <input type="checkbox" id="defensive-toggle" checked />
-      Incluir activos defensivos (BND · GLD · SHY)
-    </label>
-
-    <hr />
-
-    <!-- Ventana temporal -->
-    <div class="input-group">
-      <label for="lookback-select">Ventana temporal</label>
-      <select id="lookback-select" class="text-input">
-        <option value="3y">Últimos 3 años</option>
-        <option value="5y" selected>Últimos 5 años</option>
-        <option value="10y">Últimos 10 años</option>
-        <option value="custom">Personalizada…</option>
-      </select>
-    </div>
-
-    <!-- Fechas personalizadas (se muestra solo si elige “Personalizada…”) -->
-    <div id="custom-dates" class="hidden">
-      <div class="input-group">
-        <label>Desde</label>
-        <input type="date" id="date-start" class="text-input" />
-      </div>
-      <div class="input-group">
-        <label>Hasta</label>
-        <input type="date" id="date-end" class="text-input" />
-      </div>
-    </div>
-
-    <!-- Frecuencia -->
-    <div class="input-group">
-      <label for="freq-select">Frecuencia de precio</label>
-      <select id="freq-select" class="text-input">
-        <option value="D">Diaria</option>
-        <option value="W">Semanal</option>
-        <option value="M" selected>Mensual</option>
-      </select>
-    </div>
-
-    <!-- Tasa libre de riesgo -->
-    <div class="input-group">
-      <label for="rf-input">Tasa libre de riesgo (%)</label>
-      <input type="number"
-             id="rf-input"
-             class="text-input"
-             value="4"
-             step="0.1" />
-    </div>
-
-  </div><!-- /advanced-panel -->
-</div><!-- /card -->
-
-        <!-- 3. API KEY (solo se ve la primera vez) -->
-<div class="card" id="apiKeyCard">
-  <h3 class="card-header">3. API Key Alpha Vantage</h3>
-
-  <div class="input-group">
-    <label for="apiKeyInput">Pega aquí tu key gratuita</label>
-    <input id="apiKeyInput"
-           class="text-input"
-           placeholder="PF06Z4B1IVQX59NQ" />
-  </div>
-
-  <button class="cta-button" onclick="guardarKey()">Guardar key</button>
-  <small>Se guarda en tu navegador y no la pediremos de nuevo.</small>
-</div>
-
-
+        <!-- ▼▼▼ CAMBIO 1-A: La tarjeta de la API Key ha sido eliminada de aquí. ▼▼▼ -->
+        
         <!-- BOTÓN CTA -->
         <button id="optimize-btn" class="cta-button">Analizar y optimizar</button>
       </div>
 
       <!-- COLUMNA DASHBOARD -->
-      <div class="dashboard-column hidden" id="dashboard">
+      <!-- ▼▼▼ CAMBIO 1-B: La clase 'hidden' ha sido eliminada de la siguiente línea. ▼▼▼ -->
+      <div class="dashboard-column" id="dashboard">
         <h2>Resultados</h2>
 
         <div class="card">
-          <!-- Métricas clave -->
           <div class="metrics-grid">
             <div class="metric-item">
               <h3>Rend. anual</h3><p id="metric-ret">–</p>
@@ -168,12 +130,9 @@
             </div>
           </div>
 
-          <!--  NUEVO  ----------------------------------------------------------- -->
           <h3 class="card-header">Precios ajustados</h3>
           <canvas id="pricesChart" aria-label="Precios"></canvas>
-          <!-- ------------------------------------------------------------------- -->
           
-          <!-- Gráficos -->
           <div class="charts-grid">
             <div>
               <h3 class="card-header">Frontera eficiente</h3>
