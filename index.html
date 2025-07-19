@@ -9,15 +9,22 @@
     <!-- Hoja de estilos -->
     <link rel="stylesheet" href="css/style.css" />
 
-<!-- en <head>  (una línea nueva, antes de main.js) -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
+    <!-- ▼▼▼ INICIO DE LOS CAMBIOS ▼▼▼ -->
+    <!-- Adaptador de fechas para Chart.js (requiere Luxon) -->
+    <script src="https://cdn.jsdelivr.net/npm/luxon@3/build/global/luxon.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1" defer></script>
+    <!-- ▲▲▲ FIN DE LOS CAMBIOS ▲▲▲ -->
 
-<!-- y deja tu línea de Pyodide + la de main.js como estaban -->
-<script src="https://cdn.jsdelivr.net/pyodide/v0.26.0/full/pyodide.js" defer></script>
-<script type="module" src="js/main.js" defer></script>
+    <!-- en <head>  (una línea nueva, antes de main.js) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
+
+    <!-- y deja tu línea de Pyodide + la de main.js como estaban -->
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.26.0/full/pyodide.js" defer></script>
+    <script type="module" src="js/main.js" defer></script>
   </head>
 
   <body>
+    <!-- El resto del body no cambia... -->
     <div class="main-container">
       <!-- COLUMNA DE CONTROLES -->
       <div class="controls-column">
