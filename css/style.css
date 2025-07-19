@@ -94,3 +94,18 @@ body{
   display:grid;grid-template-columns:2fr 1fr;gap:30px;align-items:center
 }
 .hidden{display:none!important}
+
+/* ▼▼▼ CAMBIO 3: Reglas nuevas añadidas al final del archivo. ▼▼▼ */
+/* --- CTA fijo (solo cuando hace falta) --------------------------- */
+#optimize-btn.sticky{
+  position:fixed;               /* queda pegado */
+  bottom:16px; left:50%;
+  transform:translateX(-50%);
+  z-index:1000;
+  width:280px;                  /* igual que antes */
+}
+
+/* Ajuste de margen inferior para que no se “coma” el botón */
+.controls-column{
+  padding-bottom:80px;
+}
