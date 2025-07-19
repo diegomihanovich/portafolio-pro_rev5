@@ -1,5 +1,3 @@
- import Chart from "https://cdn.jsdelivr.net/npm/chart.js/+esm";   // <script type="module">
-
 /* PortaFolio Pro – lógica mínima (v0.2) */
 document.addEventListener('DOMContentLoaded', async () => {
 
