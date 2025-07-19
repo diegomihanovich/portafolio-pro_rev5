@@ -6,10 +6,12 @@ params = raw.to_py() if hasattr(raw, "to_py") else (raw if isinstance(raw, dict)
 tickers = params.get("tickers", [])
 freq    = params.get("freq", "d").lower()           # 'd','w','m'
 
+import urllib.parse           #  ← nueva línea
 def stooq_url(ticker):
     sym  = ticker.lower() + ".us"
     base = f"https://stooq.com/q/d/l/?s={sym}&i={freq}"
-    return "https://api.allorigins.win/raw?url=" + base   # proxy CORS
+    encoded = urllib.parse.quote(base, safe="")      # 👈 encode completo
+    return "https://api.allorigins.win/raw?url=" + encoded
 
 def get_prices(t):
     try:
