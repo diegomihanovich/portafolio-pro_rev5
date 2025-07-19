@@ -138,10 +138,6 @@ statsProxy.destroy();
   alert('Error al obtener o ejecutar fetch_prices.py');
 }
 
-    // 4) Dibujar gráficos placeholder
-    drawPlaceholders();
-    if (window.innerWidth < 1200) dashboard.scrollIntoView({behavior:'smooth'});
-  });
 
   /* ---------- API KEY helper ---------- */
 window.guardarKey = function guardarKey() {
