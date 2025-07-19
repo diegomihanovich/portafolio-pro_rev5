@@ -1,26 +1,26 @@
 /* PortaFolio Pro – lógica mínima (v0.2) */
 document.addEventListener('DOMContentLoaded', async () => {
 
- /* ---------- A. Pyodide ---------- */
-const pyodideReady = loadPyodide({
-  indexURL: "https://cdn.jsdelivr.net/pyodide/v0.26.0/full/"
-}).then(async (py) => {
-  await py.loadPackage([
-    'numpy', 'pandas',
-    'requests', 'pyodide-http'   //  ← ya los habías añadido
-  ]);
-  await py.loadPackage('micropip');
-  console.log('✅ Pyodide listo');
-  return py;
-});
+  /* ---------- A. Pyodide ---------- */
+  const pyodideReady = loadPyodide({
+    indexURL: "https://cdn.jsdelivr.net/pyodide/v0.26.0/full/"
+  }).then(async (py) => {
+    await py.loadPackage([
+      'numpy', 'pandas',
+      'requests', 'pyodide-http'   //  ← ya los habías añadido
+    ]);
+    await py.loadPackage('micropip');
+    console.log('✅ Pyodide listo');
+    return py;
+  });
 
-window.pyodideReady = pyodideReady;   // <<–– ¡ESTA LÍNEA!
- 
-let pricesChart;                       // gráfico global (una sola instancia)
+  window.pyodideReady = pyodideReady;   // <<–– ¡ESTA LÍNEA!
 
-function destroyChart(){
-  if (pricesChart) { pricesChart.destroy(); pricesChart = null; }
-}
+  let pricesChart;                       // gráfico global (una sola instancia)
+
+  function destroyChart(){
+    if (pricesChart) { pricesChart.destroy(); pricesChart = null; }
+  }
 
 
   /* ---------- B. DOM refs ---------- */
@@ -74,89 +74,92 @@ function destroyChart(){
     // 2) Mostrar dashboard
     dashboard.classList.remove('hidden');
 
-// 3) Ejecutar Python
-try {
-  const py = await pyodideReady;
+    // 3) Ejecutar Python
+    try {
+      const py = await pyodideReady;
 
-  // 3-a) Preparo parámetros y los paso a Python
-  const params = buildPythonInput();
-  py.globals.set('params', params);
+      // 3-a) Preparo parámetros y los paso a Python
+      const params = buildPythonInput();
+      py.globals.set('params', params);
 
-  // 3-b) Traigo el código de Python desde GitHub Pages
-  const response = await fetch("python/fetch_prices.py");
-  const code     = await response.text();
+      // 3-b) Traigo el código de Python desde GitHub Pages
+      const response = await fetch("python/fetch_prices.py");
+      const code     = await response.text();
 
-  // 3-c) Lo ejecuto en Pyodide y, si crashea, muestro el traceback
-  try {
-    await py.runPythonAsync(code);          // ← aquí corre fetch_prices.py
-  } catch (err) {
-    console.error(err);                                 // muestra el stack JS+Py
-    alert('Uy, Python explotó: ' + err);    // aviso amigable por si acaso
-    throw err;                              // re-lanzamos para que JS se entere
-  }
-
-// 3-d) leer resultados y actualizar la UI -------------------------
-const statsProxy  = py.globals.get("stats");          // PyProxy → dict
-const pricesJSON  = window.py_prices_json;        // viene directo de Python
-
-const stats = statsProxy.toJs();                     // objeto JS normal
-updateMetricCards(stats);
-
-// ---------- gráfico de precios ----------------------------------
-destroyChart();                                      // borra si ya había
-
-const dataJS  = JSON.parse(pricesJSON);              // array de objetos
-const labels  = dataJS.map(r => r.Date);
-const datasets = params.tickers.map(t => ({
-  label : t,
-  data  : dataJS.map(r => r[t]),
-  fill  : false
-}));
-
-pricesChart = new Chart(
-  document.getElementById("pricesChart"),
-  {
-    type   : "line",
-    data   : { labels, datasets },
-    options: {
-      responsive: true,
-      scales: {
-        x: { ticks: { maxTicksLimit: 10 } },
-        y: { title: { display: true, text: "Precio ajustado" } }
+      // 3-c) Lo ejecuto en Pyodide y, si crashea, muestro el traceback
+      try {
+        await py.runPythonAsync(code);          // ← aquí corre fetch_prices.py
+      } catch (err) {
+        console.error(err);                                 // muestra el stack JS+Py
+        alert('Uy, Python explotó: ' + err);    // aviso amigable por si acaso
+        throw err;                              // re-lanzamos para que JS se entere
       }
+
+      // 3-d) leer resultados y actualizar la UI -------------------------
+      const statsProxy  = py.globals.get("stats");          // PyProxy → dict
+      
+      // ▼▼▼ INICIO DEL CAMBIO 1-A ▼▼▼
+      const pricesJSON  = window.py_prices_json; // <-- ¡CAMBIO REALIZADO! Esta línea se ha modificado.
+      // ▲▲▲ FIN DEL CAMBIO 1-A ▲▲▲
+
+      const stats = statsProxy.toJs();                     // objeto JS normal
+      updateMetricCards(stats);
+
+      // ---------- gráfico de precios ----------------------------------
+      destroyChart();                                      // borra si ya había
+
+      const dataJS  = JSON.parse(pricesJSON);              // array de objetos
+      const labels  = dataJS.map(r => r.Date);
+      const datasets = params.tickers.map(t => ({
+        label : t,
+        data  : dataJS.map(r => r[t]),
+        fill  : false
+      }));
+
+      pricesChart = new Chart(
+        document.getElementById("pricesChart"),
+        {
+          type   : "line",
+          data   : { labels, datasets },
+          options: {
+            responsive: true,
+            scales: {
+              x: { ticks: { maxTicksLimit: 10 } },
+              y: { title: { display: true, text: "Precio ajustado" } }
+            }
+          }
+        }
+      );
+
+      // -- libera memoria (solo lo que existe)
+      statsProxy.destroy();
+
+
+    } catch (err) {
+      // Falla la red o la carga del .py ⇒ caemos aquí
+      console.error(err);
+      alert('Error al obtener o ejecutar fetch_prices.py');
     }
-  }
-);
-
-// -- libera memoria (solo lo que existe)
-statsProxy.destroy();
-
-
-} catch (err) {
-  // Falla la red o la carga del .py ⇒ caemos aquí
-  console.error(err);
-  alert('Error al obtener o ejecutar fetch_prices.py');
-}
-
+  }); // <-- Fin de optimizeBtn.addEventListener
 
   /* ---------- API KEY helper ---------- */
-window.guardarKey = function guardarKey() {
-  const key = document.getElementById("apiKeyInput").value.trim();
-  if (!key) { alert("⚠️  Escribe tu clave primero"); return; }
+  window.guardarKey = function guardarKey() {
+    const key = document.getElementById("apiKeyInput").value.trim();
+    if (!key) { alert("⚠️  Escribe tu clave primero"); return; }
 
-  localStorage.setItem("av_key", key);
-  alert("✅ ¡Key guardada! Ya puedes usar cualquier ticker.\n\n" +
-        "Si quieres, recarga la página para ocultar este cuadro.");
-  // Opcional: ocultar la tarjeta para que no moleste más
-  document.getElementById("apiKeyCard").classList.add("hidden");
-};
+    localStorage.setItem("av_key", key);
+    alert("✅ ¡Key guardada! Ya puedes usar cualquier ticker.\n\n" +
+          "Si quieres, recarga la página para ocultar este cuadro.");
+    // Opcional: ocultar la tarjeta para que no moleste más
+    document.getElementById("apiKeyCard").classList.add("hidden");
+  };
 
-// Al cargar, si la key ya existe, escondemos la tarjeta automáticamente
-if (localStorage.getItem("av_key")) {
-  document.addEventListener("DOMContentLoaded", () =>
-    document.getElementById("apiKeyCard").classList.add("hidden"));
-}
-                                    
+  // Al cargar, si la key ya existe, escondemos la tarjeta automáticamente
+  if (localStorage.getItem("av_key")) {
+    document.addEventListener("DOMContentLoaded", () =>
+      document.getElementById("apiKeyCard").classList.add("hidden"));
+  }
+                                      
   /* ---------- E. Chart placeholders ---------- */
   function drawPlaceholders(){
     // Frontera
@@ -189,6 +192,10 @@ if (localStorage.getItem("av_key")) {
     });
 
   }
+  
+  // ▼▼▼ INICIO DEL CAMBIO 1-B ▼▼▼
+  // drawPlaceholders(); // <-- ¡CAMBIO REALIZADO! Esta función ya no se llama.
+  // ▲▲▲ FIN DEL CAMBIO 1-B ▲▲▲
 
   function updateMetricCards(stats){
     if(!stats) return;
