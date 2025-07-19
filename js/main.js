@@ -5,23 +5,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   const pyodideReady = loadPyodide({
     indexURL: "https://cdn.jsdelivr.net/pyodide/v0.26.0/full/"
   }).then(async (py) => {
-    await py.loadPackage([
-      'numpy', 'pandas',
-      'requests', 'pyodide-http'
-    ]);
+    await py.loadPackage(['numpy', 'pandas', 'requests', 'pyodide-http']);
     await py.loadPackage('micropip');
     console.log('✅ Pyodide listo');
     return py;
   });
-
   window.pyodideReady = pyodideReady;
 
   let pricesChart;
-
   function destroyChart(){
     if (pricesChart) { pricesChart.destroy(); pricesChart = null; }
   }
-
 
   /* ---------- B. DOM refs ---------- */
   const advancedToggle = document.getElementById('advanced-toggle');
@@ -31,7 +25,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const dateStartInput = document.getElementById('date-start');
   const dateEndInput   = document.getElementById('date-end');
   const optimizeBtn    = document.getElementById('optimize-btn');
-  const dashboard      = document.getElementById('dashboard');
+  const dashboard      = document.getElementById('dashboard'); // La referencia se mantiene, pero ya no se usa para ocultar/mostrar.
 
   /* ---------- C. UI behaviours ---------- */
   advancedToggle.addEventListener('change', () =>
@@ -44,37 +38,25 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   function buildPythonInput(){
     const tickers = document.getElementById('tickers-input').value
-      .split(',')
-      .map(t => t.trim().toUpperCase())
-      .filter(Boolean);
-
+      .split(',').map(t => t.trim().toUpperCase()).filter(Boolean);
     const freq = document.getElementById('freq-select').value;
     const rf   = parseFloat(document.getElementById('rf-input').value) || 0;
-
     const lookback = lookbackSelect.value;
     if(lookback !== 'custom'){
       return {tickers, freq, rf, mode:'preset', lookback};
     }
-    return {
-      tickers, freq, rf, mode:'custom',
-      start: dateStartInput.value, end: dateEndInput.value
-    };
+    return { tickers, freq, rf, mode:'custom', start: dateStartInput.value, end: dateEndInput.value };
   }
 
-  /* ---------- D. Optimize (placeholder) ---------- */
+  /* ---------- D. Optimize ---------- */
   optimizeBtn.addEventListener('click', async () => {
-    // 1) Validaciones rápidas
     const tickers = document.getElementById('tickers-input').value
-      .split(',')
-      .map(t => t.trim().toUpperCase())
-      .filter(Boolean);
+      .split(',').map(t => t.trim().toUpperCase()).filter(Boolean);
     if (tickers.length === 0) { alert('Ingresa al menos un ticker'); return; }
     if (tickers.length > 20)  { alert('Máximo 20 activos'); return; }
 
-    // 2) Mostrar dashboard
-    dashboard.classList.remove('hidden');
-
-    // 3) Ejecutar Python
+    // ▼▼▼ CAMBIO 2-B: La línea que mostraba el dashboard se eliminó de aquí. ▼▼▼
+    
     try {
       const py = await pyodideReady;
       const params = buildPythonInput();
@@ -95,42 +77,26 @@ document.addEventListener('DOMContentLoaded', async () => {
       const stats = statsProxy.toJs();
       updateMetricCards(stats);
 
-      // ---------- gráfico de precios ----------------------------------
       destroyChart();
-
       const dataJS  = JSON.parse(pricesJSON);
-      
-      // ▼▼▼ INICIO DE LOS CAMBIOS ▼▼▼
-      // a) Convertimos las fechas a objetos Date para que Chart.js las entienda
       const labels = dataJS.map(r => new Date(r.Date));
-
       const datasets = params.tickers.map(t => ({
         label : t,
         data  : dataJS.map(r => r[t]),
         fill  : false
       }));
 
-      pricesChart = new Chart(
-        document.getElementById("pricesChart"),
-        {
-          type   : "line",
-          data   : { labels, datasets },
-          options: {
-            responsive: true,
-            // b) Le decimos a Chart.js que el eje X es una escala de tiempo
-            scales: {
-              x: {
-                type : 'time',
-                time : { unit:'year' },
-                ticks: { maxTicksLimit: 10 }
-              },
-              y: { title: { display: true, text: "Precio ajustado" } }
-            }
+      pricesChart = new Chart(document.getElementById("pricesChart"), {
+        type: "line",
+        data: { labels, datasets },
+        options: {
+          responsive: true,
+          scales: {
+            x: { type: 'time', time: { unit:'year' }, ticks: { maxTicksLimit: 10 } },
+            y: { title: { display: true, text: "Precio ajustado" } }
           }
         }
-      );
-      // ▲▲▲ FIN DE LOS CAMBIOS ▲▲▲
-
+      });
       statsProxy.destroy();
 
     } catch (err) {
@@ -139,26 +105,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  /* ---------- API KEY helper ---------- */
-  window.guardarKey = function guardarKey() {
-    const key = document.getElementById("apiKeyInput").value.trim();
-    if (!key) { alert("⚠️  Escribe tu clave primero"); return; }
-    localStorage.setItem("av_key", key);
-    alert("✅ ¡Key guardada! Ya puedes usar cualquier ticker.\n\n" +
-          "Si quieres, recarga la página para ocultar este cuadro.");
-    document.getElementById("apiKeyCard").classList.add("hidden");
-  };
+  // ▼▼▼ CAMBIO 2-A: Todo el código que manejaba la API Key (guardarKey y el check de localStorage) ha sido eliminado de aquí. ▼▼▼
 
-  if (localStorage.getItem("av_key")) {
-    document.addEventListener("DOMContentLoaded", () =>
-      document.getElementById("apiKeyCard").classList.add("hidden"));
-  }
-  
-  // 3. (Opcional) Nos aseguramos de que esta función no se llame
-  // drawPlaceholders(); 
-                                      
   /* ---------- E. Chart placeholders ---------- */
-  // La función drawPlaceholders() sigue existiendo, pero ya no la usamos
+  drawPlaceholders(); // Ahora llamamos a los placeholders al cargar la página.
+  
   function drawPlaceholders(){
     const scatterCtx = document.getElementById('scatterChart').getContext('2d');
     new Chart(scatterCtx, {type:'scatter',data:{datasets:[{label:'Portafolios simulados',data:Array.from({length:150},()=>({x:Math.random()*0.25+0.1,y:Math.random()*0.15+0.05})),backgroundColor:'rgba(109,40,217,.25)',pointRadius:3},{label:'Óptimo',data:[{x:0.18,y:0.12}],backgroundColor:'#E11D48',pointRadius:7,pointStyle:'star'}]},options:{scales:{x:{title:{display:true,text:'Volatilidad'}},y:{title:{display:true,text:'Retorno'}}},responsive:true}});
@@ -171,4 +122,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('metric-ret').textContent = (stats.mean*100).toFixed(1) + '%';
     document.getElementById('metric-vol').textContent = (stats.vol*100).toFixed(1) + '%';
   }
+
+  // ▼▼▼ CAMBIO 2-C: Código nuevo para el botón "sticky". ▼▼▼
+  /* --- Botón fijo al pie de la columna --- */
+  const cta = document.getElementById('optimize-btn');
+  const observer = new IntersectionObserver(
+    ([entry]) => cta.classList.toggle('sticky', !entry.isIntersecting),
+    { root:null, threshold:1 }
+  );
+  observer.observe(cta);
+  
 });
