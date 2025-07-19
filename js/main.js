@@ -7,16 +7,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   }).then(async (py) => {
     await py.loadPackage([
       'numpy', 'pandas',
-      'requests', 'pyodide-http'   //  ← ya los habías añadido
+      'requests', 'pyodide-http'
     ]);
     await py.loadPackage('micropip');
     console.log('✅ Pyodide listo');
     return py;
   });
 
-  window.pyodideReady = pyodideReady;   // <<–– ¡ESTA LÍNEA!
+  window.pyodideReady = pyodideReady;
 
-  let pricesChart;                       // gráfico global (una sola instancia)
+  let pricesChart;
 
   function destroyChart(){
     if (pricesChart) { pricesChart.destroy(); pricesChart = null; }
@@ -77,39 +77,33 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 3) Ejecutar Python
     try {
       const py = await pyodideReady;
-
-      // 3-a) Preparo parámetros y los paso a Python
       const params = buildPythonInput();
       py.globals.set('params', params);
 
-      // 3-b) Traigo el código de Python desde GitHub Pages
       const response = await fetch("python/fetch_prices.py");
       const code     = await response.text();
-
-      // 3-c) Lo ejecuto en Pyodide y, si crashea, muestro el traceback
       try {
-        await py.runPythonAsync(code);          // ← aquí corre fetch_prices.py
+        await py.runPythonAsync(code);
       } catch (err) {
-        console.error(err);                                 // muestra el stack JS+Py
-        alert('Uy, Python explotó: ' + err);    // aviso amigable por si acaso
-        throw err;                              // re-lanzamos para que JS se entere
+        console.error(err);
+        alert('Uy, Python explotó: ' + err);
+        throw err;
       }
 
-      // 3-d) leer resultados y actualizar la UI -------------------------
-      const statsProxy  = py.globals.get("stats");          // PyProxy → dict
-      
-      // ▼▼▼ INICIO DEL CAMBIO 1-A ▼▼▼
-      const pricesJSON  = window.py_prices_json; // <-- ¡CAMBIO REALIZADO! Esta línea se ha modificado.
-      // ▲▲▲ FIN DEL CAMBIO 1-A ▲▲▲
-
-      const stats = statsProxy.toJs();                     // objeto JS normal
+      const statsProxy  = py.globals.get("stats");
+      const pricesJSON  = window.py_prices_json;
+      const stats = statsProxy.toJs();
       updateMetricCards(stats);
 
       // ---------- gráfico de precios ----------------------------------
-      destroyChart();                                      // borra si ya había
+      destroyChart();
 
-      const dataJS  = JSON.parse(pricesJSON);              // array de objetos
-      const labels  = dataJS.map(r => r.Date);
+      const dataJS  = JSON.parse(pricesJSON);
+      
+      // ▼▼▼ INICIO DE LOS CAMBIOS ▼▼▼
+      // Convertimos las fechas a objetos Date de JS para que Chart.js las entienda
+      const labels = dataJS.map(r => new Date(r.Date));
+
       const datasets = params.tickers.map(t => ({
         label : t,
         data  : dataJS.map(r => r[t]),
@@ -124,37 +118,33 @@ document.addEventListener('DOMContentLoaded', async () => {
           options: {
             responsive: true,
             scales: {
-              x: { ticks: { maxTicksLimit: 10 } },
+              // Le decimos a Chart.js que el eje X es una escala de tiempo
+              x: { type:'time', time:{ unit:'year' } },
               y: { title: { display: true, text: "Precio ajustado" } }
             }
           }
         }
       );
+      // ▲▲▲ FIN DE LOS CAMBIOS ▲▲▲
 
-      // -- libera memoria (solo lo que existe)
       statsProxy.destroy();
 
-
     } catch (err) {
-      // Falla la red o la carga del .py ⇒ caemos aquí
       console.error(err);
       alert('Error al obtener o ejecutar fetch_prices.py');
     }
-  }); // <-- Fin de optimizeBtn.addEventListener
+  });
 
   /* ---------- API KEY helper ---------- */
   window.guardarKey = function guardarKey() {
     const key = document.getElementById("apiKeyInput").value.trim();
     if (!key) { alert("⚠️  Escribe tu clave primero"); return; }
-
     localStorage.setItem("av_key", key);
     alert("✅ ¡Key guardada! Ya puedes usar cualquier ticker.\n\n" +
           "Si quieres, recarga la página para ocultar este cuadro.");
-    // Opcional: ocultar la tarjeta para que no moleste más
     document.getElementById("apiKeyCard").classList.add("hidden");
   };
 
-  // Al cargar, si la key ya existe, escondemos la tarjeta automáticamente
   if (localStorage.getItem("av_key")) {
     document.addEventListener("DOMContentLoaded", () =>
       document.getElementById("apiKeyCard").classList.add("hidden"));
@@ -162,41 +152,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                                       
   /* ---------- E. Chart placeholders ---------- */
   function drawPlaceholders(){
-    // Frontera
     const scatterCtx = document.getElementById('scatterChart').getContext('2d');
-    new Chart(scatterCtx, {
-      type:'scatter',
-      data:{
-        datasets:[{
-          label:'Portafolios simulados',
-          data:Array.from({length:150},()=>({x:Math.random()*0.25+0.1,y:Math.random()*0.15+0.05})),
-          backgroundColor:'rgba(109,40,217,.25)',
-          pointRadius:3
-        },{
-          label:'Óptimo',
-          data:[{x:0.18,y:0.12}],
-          backgroundColor:'#E11D48',
-          pointRadius:7,
-          pointStyle:'star'
-        }]
-      },
-      options:{scales:{x:{title:{display:true,text:'Volatilidad'}},y:{title:{display:true,text:'Retorno'}}},responsive:true}
-    });
-
-    // Torta
+    new Chart(scatterCtx, {type:'scatter',data:{datasets:[{label:'Portafolios simulados',data:Array.from({length:150},()=>({x:Math.random()*0.25+0.1,y:Math.random()*0.15+0.05})),backgroundColor:'rgba(109,40,217,.25)',pointRadius:3},{label:'Óptimo',data:[{x:0.18,y:0.12}],backgroundColor:'#E11D48',pointRadius:7,pointStyle:'star'}]},options:{scales:{x:{title:{display:true,text:'Volatilidad'}},y:{title:{display:true,text:'Retorno'}}},responsive:true}});
     const pieCtx = document.getElementById('pieChart').getContext('2d');
-    new Chart(pieCtx, {
-      type:'pie',
-      data:{labels:['AAPL','GOOG','SPY'],datasets:[{data:[40,35,25],backgroundColor:['#6D28D9','#A78BFA','#DDD6FE']}]},
-      options:{responsive:true}
-    });
-
+    new Chart(pieCtx, {type:'pie',data:{labels:['AAPL','GOOG','SPY'],datasets:[{data:[40,35,25],backgroundColor:['#6D28D9','#A78BFA','#DDD6FE']}]},options:{responsive:true}});
   }
   
-  // ▼▼▼ INICIO DEL CAMBIO 1-B ▼▼▼
-  // drawPlaceholders(); // <-- ¡CAMBIO REALIZADO! Esta función ya no se llama.
-  // ▲▲▲ FIN DEL CAMBIO 1-B ▲▲▲
-
   function updateMetricCards(stats){
     if(!stats) return;
     document.getElementById('metric-ret').textContent = (stats.mean*100).toFixed(1) + '%';
