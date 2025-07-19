@@ -97,7 +97,7 @@ try {
 
 // 3-d) leer resultados y actualizar la UI -------------------------
 const statsProxy  = py.globals.get("stats");          // PyProxy → dict
-const pricesJSON  = py.globals.get("py_prices_json").toJs(); // string JSON ✔️
+const pricesJSON  = window.py_prices_json;        // viene directo de Python
 
 const stats = statsProxy.toJs();                     // objeto JS normal
 updateMetricCards(stats);
