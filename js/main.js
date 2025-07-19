@@ -101,7 +101,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const dataJS  = JSON.parse(pricesJSON);
       
       // ▼▼▼ INICIO DE LOS CAMBIOS ▼▼▼
-      // Convertimos las fechas a objetos Date de JS para que Chart.js las entienda
+      // a) Convertimos las fechas a objetos Date para que Chart.js las entienda
       const labels = dataJS.map(r => new Date(r.Date));
 
       const datasets = params.tickers.map(t => ({
@@ -117,9 +117,13 @@ document.addEventListener('DOMContentLoaded', async () => {
           data   : { labels, datasets },
           options: {
             responsive: true,
+            // b) Le decimos a Chart.js que el eje X es una escala de tiempo
             scales: {
-              // Le decimos a Chart.js que el eje X es una escala de tiempo
-              x: { type:'time', time:{ unit:'year' } },
+              x: {
+                type : 'time',
+                time : { unit:'year' },
+                ticks: { maxTicksLimit: 10 }
+              },
               y: { title: { display: true, text: "Precio ajustado" } }
             }
           }
@@ -149,8 +153,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.addEventListener("DOMContentLoaded", () =>
       document.getElementById("apiKeyCard").classList.add("hidden"));
   }
+  
+  // 3. (Opcional) Nos aseguramos de que esta función no se llame
+  // drawPlaceholders(); 
                                       
   /* ---------- E. Chart placeholders ---------- */
+  // La función drawPlaceholders() sigue existiendo, pero ya no la usamos
   function drawPlaceholders(){
     const scatterCtx = document.getElementById('scatterChart').getContext('2d');
     new Chart(scatterCtx, {type:'scatter',data:{datasets:[{label:'Portafolios simulados',data:Array.from({length:150},()=>({x:Math.random()*0.25+0.1,y:Math.random()*0.15+0.05})),backgroundColor:'rgba(109,40,217,.25)',pointRadius:3},{label:'Óptimo',data:[{x:0.18,y:0.12}],backgroundColor:'#E11D48',pointRadius:7,pointStyle:'star'}]},options:{scales:{x:{title:{display:true,text:'Volatilidad'}},y:{title:{display:true,text:'Retorno'}}},responsive:true}});
