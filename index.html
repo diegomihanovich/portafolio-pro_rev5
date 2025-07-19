@@ -9,16 +9,20 @@
     <!-- Hoja de estilos -->
     <link rel="stylesheet" href="css/style.css" />
 
-    <!-- ▼▼▼ INICIO DE LOS CAMBIOS ▼▼▼ -->
-    <!-- Adaptador de fechas para Chart.js (requiere Luxon) -->
-    <script src="https://cdn.jsdelivr.net/npm/luxon@3/build/global/luxon.min.js" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1" defer></script>
+    <!-- ▼▼▼ INICIO DE LOS CAMBIOS (ORDEN CORRECTO) ▼▼▼ -->
+
+    <!-- 1. Luxon: Es una dependencia, no necesita a Chart.js para funcionar -->
+    <script defer src="https://cdn.jsdelivr.net/npm/luxon@3/build/global/luxon.min.js"></script>
+
+    <!-- 2. Chart.js: La librería principal, la "base" que debe cargarse ahora -->
+    <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <!-- 3. Adaptador: Se engancha a Chart.js, por eso debe cargarse DESPUÉS -->
+    <script defer src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1"></script>
+    
     <!-- ▲▲▲ FIN DE LOS CAMBIOS ▲▲▲ -->
 
-    <!-- en <head>  (una línea nueva, antes de main.js) -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
-
-    <!-- y deja tu línea de Pyodide + la de main.js como estaban -->
+    <!-- Pyodide y tu script principal van después, como estaban -->
     <script src="https://cdn.jsdelivr.net/pyodide/v0.26.0/full/pyodide.js" defer></script>
     <script type="module" src="js/main.js" defer></script>
   </head>
