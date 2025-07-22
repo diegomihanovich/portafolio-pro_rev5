@@ -109,3 +109,8 @@ body{
 .controls-column{
   padding-bottom:80px;
 }
+/* AÑADIR AL FINAL DE style.css ▼▼▼ */
+canvas{
+  border:1px dashed var(--color-border);
+  border-radius:8px;
+}
