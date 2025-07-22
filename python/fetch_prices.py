@@ -1,5 +1,3 @@
-# ▼▼▼ COPIA DESDE AQUÍ... ▼▼▼
-
 import pyodide_http
 pyodide_http.patch_all()
 
@@ -62,5 +60,3 @@ js.py_stats = stats
 js.py_returns_df = returns_df
 js.py_prices = prices
 js.py_prices_json = prices.reset_index().to_json(orient="records")
-
-# ▲▲▲ ...HASTA AQUÍ ▲▲▲
