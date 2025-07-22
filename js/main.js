@@ -1,5 +1,3 @@
-// ▼▼▼ COPIA DESDE AQUÍ... ▼▼▼
-
 /* PortaFolio Pro – lógica mínima (v0.3) */
 document.addEventListener('DOMContentLoaded', async () => {
 
@@ -154,5 +152,3 @@ document.addEventListener('DOMContentLoaded', async () => {
   observer.observe(cta);
   
 });
-
-// ▲▲▲ ...HASTA AQUÍ ▲▲▲
