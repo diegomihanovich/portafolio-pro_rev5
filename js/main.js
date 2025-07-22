@@ -1,4 +1,6 @@
-/* PortaFolio Pro – lógica mínima (v0.2) */
+// ▼▼▼ COPIA DESDE AQUÍ... ▼▼▼
+
+/* PortaFolio Pro – lógica mínima (v0.3) */
 document.addEventListener('DOMContentLoaded', async () => {
 
   /* ---------- A. Pyodide ---------- */
@@ -12,9 +14,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
   window.pyodideReady = pyodideReady;
 
-  let pricesChart;
-  function destroyChart(){
+  let pricesChart, pieChart, scatterChart;
+  function destroyCharts(){
     if (pricesChart) { pricesChart.destroy(); pricesChart = null; }
+    if (pieChart)    { pieChart.destroy();    pieChart = null;    }
+    if (scatterChart){ scatterChart.destroy();scatterChart = null;}
   }
 
   /* ---------- B. DOM refs ---------- */
@@ -25,7 +29,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   const dateStartInput = document.getElementById('date-start');
   const dateEndInput   = document.getElementById('date-end');
   const optimizeBtn    = document.getElementById('optimize-btn');
-  const dashboard      = document.getElementById('dashboard'); // La referencia se mantiene, pero ya no se usa para ocultar/mostrar.
 
   /* ---------- C. UI behaviours ---------- */
   advancedToggle.addEventListener('change', () =>
@@ -54,8 +57,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       .split(',').map(t => t.trim().toUpperCase()).filter(Boolean);
     if (tickers.length === 0) { alert('Ingresa al menos un ticker'); return; }
     if (tickers.length > 20)  { alert('Máximo 20 activos'); return; }
-
-    // ▼▼▼ CAMBIO 2-B: La línea que mostraba el dashboard se eliminó de aquí. ▼▼▼
     
     try {
       const py = await pyodideReady;
@@ -75,9 +76,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       const statsProxy  = py.globals.get("stats");
       const pricesJSON  = window.py_prices_json;
       const stats = statsProxy.toJs();
+      
       updateMetricCards(stats);
+      destroyCharts();
 
-      destroyChart();
       const dataJS  = JSON.parse(pricesJSON);
       const labels = dataJS.map(r => new Date(r.Date));
       const datasets = params.tickers.map(t => ({
@@ -89,62 +91,60 @@ document.addEventListener('DOMContentLoaded', async () => {
       pricesChart = new Chart(document.getElementById("pricesChart"), {
         type: "line",
         data: { labels, datasets },
-        options: {
-          responsive: true,
-          scales: {
-            x: { type: 'time', time: { unit:'year' }, ticks: { maxTicksLimit: 10 } },
-            y: { title: { display: true, text: "Precio ajustado" } }
-          }
-        }
+        options: { responsive: true, scales: { x: { type: 'time', time: { unit:'year' }, ticks: { maxTicksLimit: 10 } }, y: { title: { display: true, text: "Precio ajustado" } } } }
       });
+      
+      const pieCtx = document.getElementById('pieChart').getContext('2d');
+      pieChart = new Chart(pieCtx,{
+        type:'pie',
+        data:{ labels: params.tickers, datasets:[{ data: datasets.map(d=>d.data.slice(-1)[0]), backgroundColor:['#6D28D9','#9333EA','#A78BFA','#C4B5FD','#DDD6FE'] }] },
+        options:{responsive:true}
+      });
+
+      const statsPerTic = params.tickers.map(t=>{
+        const serie = dataJS.map(r=>r[t]).filter(Boolean);
+        const ret   = serie.slice(1).map((v,i)=>v/serie[i]-1);
+        const media = ret.reduce((a,b)=>a+b,0)/ret.length;
+        const vol   = Math.sqrt(ret.map(v => (v - media) ** 2).reduce((a,b)=>a+b,0)/ret.length);
+        return {x:vol,y:media,label:t};
+      });
+
+      const scatterCtx = document.getElementById('scatterChart').getContext('2d');
+      scatterChart = new Chart(scatterCtx,{
+        type:'scatter',
+        data:{ datasets:[{ label: 'Activos Individuales', data:statsPerTic, backgroundColor:'#6D28D9'}] },
+        options:{ responsive: true, plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label:ctx=>`${ctx.raw.label}: Ret. ${(ctx.raw.y*100).toFixed(1)}% / Vol. ${(ctx.raw.x*100).toFixed(1)}%` }}}}
+      });
+
       statsProxy.destroy();
-// PEGAR EL NUEVO CÓDIGO AQUÍ ▼▼▼
 
-/* ----------  Gráficos secundarios (torta + scatter)  ---------- */
-const pieCtx = document.getElementById('pieChart').getContext('2d');
-new Chart(pieCtx,{
-  type:'pie',
-  data:{
-    labels: params.tickers,
-    datasets:[{ data: datasets.map(d=>d.data.slice(-1)[0]),
-                backgroundColor:['#6D28D9','#9333EA','#A78BFA',
-                                 '#C4B5FD','#DDD6FE'] }]
-  },
-  options:{responsive:true}
-});
-
-/*  Un scatter muy simplón: media vs volatilidad por ticker */
-const statsPerTic = params.tickers.map(t=>{
-  const serie = dataJS.map(r=>r[t]).filter(Boolean);
-  const ret   = serie.slice(1).map((v,i)=>v/serie[i]-1);
-  const media = ret.reduce((a,b)=>a+b,0)/ret.length;
-  const vol   = Math.sqrt(ret.reduce((a,b)=>a+b*b,0)/ret.length);
-  return {x:vol,y:media,label:t};
-});
-const scatterCtx = document.getElementById('scatterChart').getContext('2d');
-new Chart(scatterCtx,{
-  type:'scatter',
-  data:{datasets:[{data:statsPerTic,backgroundColor:'#6D28D9'}]},
-  options:{plugins:{tooltip:{callbacks:{
-            label:ctx=>`${ctx.raw.label}: ${(ctx.raw.y*100).toFixed(2)} % / ${(ctx.raw.x*100).toFixed(2)} %`
-          }}}}
-});
     } catch (err) {
       console.error(err);
       alert('Error al obtener o ejecutar fetch_prices.py');
     }
   });
-
-  // ▼▼▼ CAMBIO 2-A: Todo el código que manejaba la API Key (guardarKey y el check de localStorage) ha sido eliminado de aquí. ▼▼▼
-
   
   function updateMetricCards(stats){
     if(!stats) return;
-    document.getElementById('metric-ret').textContent = (stats.mean*100).toFixed(1) + '%';
-    document.getElementById('metric-vol').textContent = (stats.vol*100).toFixed(1) + '%';
+
+    // Función auxiliar para rellenar cada tarjeta de métrica
+    function metric(id, value, format) {
+        const el = document.getElementById(`metric-${id}`);
+        if (format === 'percent') {
+            el.textContent = (value * 100).toFixed(1) + ' %';
+        } else if (format === 'decimal') {
+            el.textContent = value.toFixed(2);
+        } else {
+            el.textContent = value;
+        }
+    }
+
+    metric('ret',    stats.mean,   'percent');
+    metric('vol',    stats.vol,    'percent');
+    metric('sharpe', stats.sharpe, 'decimal');
+    metric('div',    stats.div,    'decimal');
   }
 
-  // ▼▼▼ CAMBIO 2-C: Código nuevo para el botón "sticky". ▼▼▼
   /* --- Botón fijo al pie de la columna --- */
   const cta = document.getElementById('optimize-btn');
   const observer = new IntersectionObserver(
@@ -154,3 +154,5 @@ new Chart(scatterCtx,{
   observer.observe(cta);
   
 });
+
+// ▲▲▲ ...HASTA AQUÍ ▲▲▲
