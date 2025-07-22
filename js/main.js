@@ -98,7 +98,37 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       });
       statsProxy.destroy();
+// PEGAR EL NUEVO CÓDIGO AQUÍ ▼▼▼
 
+/* ----------  Gráficos secundarios (torta + scatter)  ---------- */
+const pieCtx = document.getElementById('pieChart').getContext('2d');
+new Chart(pieCtx,{
+  type:'pie',
+  data:{
+    labels: params.tickers,
+    datasets:[{ data: datasets.map(d=>d.data.slice(-1)[0]),
+                backgroundColor:['#6D28D9','#9333EA','#A78BFA',
+                                 '#C4B5FD','#DDD6FE'] }]
+  },
+  options:{responsive:true}
+});
+
+/*  Un scatter muy simplón: media vs volatilidad por ticker */
+const statsPerTic = params.tickers.map(t=>{
+  const serie = dataJS.map(r=>r[t]).filter(Boolean);
+  const ret   = serie.slice(1).map((v,i)=>v/serie[i]-1);
+  const media = ret.reduce((a,b)=>a+b,0)/ret.length;
+  const vol   = Math.sqrt(ret.reduce((a,b)=>a+b*b,0)/ret.length);
+  return {x:vol,y:media,label:t};
+});
+const scatterCtx = document.getElementById('scatterChart').getContext('2d');
+new Chart(scatterCtx,{
+  type:'scatter',
+  data:{datasets:[{data:statsPerTic,backgroundColor:'#6D28D9'}]},
+  options:{plugins:{tooltip:{callbacks:{
+            label:ctx=>`${ctx.raw.label}: ${(ctx.raw.y*100).toFixed(2)} % / ${(ctx.raw.x*100).toFixed(2)} %`
+          }}}}
+});
     } catch (err) {
       console.error(err);
       alert('Error al obtener o ejecutar fetch_prices.py');
@@ -107,15 +137,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // ▼▼▼ CAMBIO 2-A: Todo el código que manejaba la API Key (guardarKey y el check de localStorage) ha sido eliminado de aquí. ▼▼▼
 
-  /* ---------- E. Chart placeholders ---------- */
-  drawPlaceholders(); // Ahora llamamos a los placeholders al cargar la página.
-  
-  function drawPlaceholders(){
-    const scatterCtx = document.getElementById('scatterChart').getContext('2d');
-    new Chart(scatterCtx, {type:'scatter',data:{datasets:[{label:'Portafolios simulados',data:Array.from({length:150},()=>({x:Math.random()*0.25+0.1,y:Math.random()*0.15+0.05})),backgroundColor:'rgba(109,40,217,.25)',pointRadius:3},{label:'Óptimo',data:[{x:0.18,y:0.12}],backgroundColor:'#E11D48',pointRadius:7,pointStyle:'star'}]},options:{scales:{x:{title:{display:true,text:'Volatilidad'}},y:{title:{display:true,text:'Retorno'}}},responsive:true}});
-    const pieCtx = document.getElementById('pieChart').getContext('2d');
-    new Chart(pieCtx, {type:'pie',data:{labels:['AAPL','GOOG','SPY'],datasets:[{data:[40,35,25],backgroundColor:['#6D28D9','#A78BFA','#DDD6FE']}]},options:{responsive:true}});
-  }
   
   function updateMetricCards(stats){
     if(!stats) return;
